@@ -2,7 +2,7 @@ import pickle
 import streamlit as st
 import pandas as pd
 
-st.set_page_config(page_title="Anirec", page_icon="🎬", layout="wide")
+st.set_page_config(page_title="Anirec", layout="wide")
 
 @st.cache_data
 def load_data():
@@ -12,45 +12,58 @@ def load_data():
         indices = pickle.load(open('model/indices.pkl', 'rb'))
         return anime_df, similarity, indices
     except FileNotFoundError:
-        st.error("File model tidak ditemukan di folder 'model'.")
+        st.error("File model tidak ditemukan.")
         return None, None, None
 
 df_clean, cosine_sim, indices = load_data()
 
-# dash
 st.title("Anirec")
-st.markdown("Temukan anime **Romance** yang ceritanya kurang lebih sama dengan favorit Anda.")
+st.write("Temukan rekomendasi anime yang mirip dengan yang Anda cari.")
 st.write("---")
 
-# fitur search
 if df_clean is not None:
     selected_anime = st.selectbox(
-        label="Ketik atau pilih judul anime yang Anda suka:",
+        label="Ketik atau pilih judul anime:",
         options=df_clean['title'].values,
         index=None,
-        placeholder="Contoh: Nisekoi, Go-Toubun no Hanayome, dan lain-lain..."
+        placeholder="Cari judul anime..."
     )
 
     if selected_anime:
         if st.button("Cari Rekomendasi"):
-            
             try:
                 idx = indices[selected_anime]
                 sim_scores = list(enumerate(cosine_sim[idx]))
                 sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
-                sim_scores = sim_scores[1:11]
                 
-                anime_indices = [i[0] for i in sim_scores]
+                candidates = sim_scores[1:31]
                 
-                st.success(f"Menampilkan 10 anime yang mirip dengan **{selected_anime}**:")
+                final_indices = []
+                query_lower = selected_anime.lower()
                 
-                results = df_clean.iloc[anime_indices][['title', 'genres', 'score']]
+                for i in candidates:
+                    if len(final_indices) >= 10:
+                        break
+                        
+                    anime_idx = i[0]
+                    anime_title = df_clean.iloc[anime_idx]['title']
+                    title_lower = anime_title.lower()
+                    
+                    if query_lower in title_lower or title_lower in query_lower:
+                        continue
+                        
+                    final_indices.append(anime_idx)
                 
-                results = results.reset_index(drop=True)
-                results.index += 1 
-                
-# Tampilkan tabel
-                st.table(results)
+                if final_indices:
+                    st.subheader(f"Hasil rekomendasi untuk {selected_anime}:")
+                    
+                    results = df_clean.iloc[final_indices][['title', 'genres', 'score']]
+                    results = results.reset_index(drop=True)
+                    results.index += 1 
+                    
+                    st.table(results)
+                else:
+                    st.warning("Tidak ditemukan rekomendasi yang unik.")
                 
             except KeyError:
-                st.error("Maaf, data anime tersebut tidak ditemukan dalam indeks sistem.")
+                st.error("Data anime tidak ditemukan dalam sistem.")
