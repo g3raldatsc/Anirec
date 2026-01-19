@@ -18,7 +18,7 @@ def load_data():
 df_clean, cosine_sim, indices = load_data()
 
 st.title("Anirec")
-st.write("Temukan rekomendasi anime yang mirip dengan yang Anda cari.")
+st.write("Temukan anime yang ceritanya mirip dengan yang kamu cari.")
 st.write("---")
 
 if df_clean is not None:
@@ -36,7 +36,7 @@ if df_clean is not None:
                 sim_scores = list(enumerate(cosine_sim[idx]))
                 sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
                 
-                candidates = sim_scores[1:31]
+                candidates = sim_scores[1:50]
                 
                 final_indices = []
                 query_lower = selected_anime.lower()
@@ -46,9 +46,14 @@ if df_clean is not None:
                         break
                         
                     anime_idx = i[0]
-                    anime_title = df_clean.iloc[anime_idx]['title']
-                    title_lower = anime_title.lower()
+                    row_data = df_clean.iloc[anime_idx]
+                    anime_title = row_data['title']
+                    anime_score = row_data['score']
                     
+                    if pd.isna(anime_score) or anime_score == 0:
+                        continue
+
+                    title_lower = anime_title.lower()
                     if query_lower in title_lower or title_lower in query_lower:
                         continue
                         
@@ -63,7 +68,7 @@ if df_clean is not None:
                     
                     st.table(results)
                 else:
-                    st.warning("Tidak ditemukan rekomendasi yang unik.")
+                    st.warning("Tidak ditemukan rekomendasi yang unik dan memiliki rating valid.")
                 
             except KeyError:
                 st.error("Data anime tidak ditemukan dalam sistem.")
