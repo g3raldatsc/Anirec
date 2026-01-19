@@ -18,7 +18,7 @@ def load_data():
 df_clean, cosine_sim, indices = load_data()
 
 st.title("Anirec")
-st.write("Temukan anime yang ceritanya mirip dengan yang kamu cari.")
+st.write("Temukan anime yang mirip dengan yang kamu cari.")
 st.write("---")
 
 if df_clean is not None:
@@ -39,7 +39,8 @@ if df_clean is not None:
                 candidates = sim_scores[1:50]
                 
                 final_indices = []
-                query_lower = selected_anime.lower()
+                
+                query_main = selected_anime.split(':')[0].lower().strip()
                 
                 for i in candidates:
                     if len(final_indices) >= 10:
@@ -54,7 +55,8 @@ if df_clean is not None:
                         continue
 
                     title_lower = anime_title.lower()
-                    if query_lower in title_lower or title_lower in query_lower:
+                    
+                    if query_main in title_lower:
                         continue
                         
                     final_indices.append(anime_idx)
