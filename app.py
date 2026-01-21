@@ -8,13 +8,15 @@ st.markdown("""
 <style>
     .anime-card {
         margin-bottom: 20px;
+        padding: 10px;
     }
     .poster-img {
         width: 100%;
         height: 300px;
         object-fit: cover;
-        border-radius: 8px;
-        margin-bottom: 8px;
+        border-radius: 20px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        margin-bottom: 10px;
     }
     .anime-title {
         height: 45px;
@@ -27,15 +29,18 @@ st.markdown("""
         font-size: 14px;
         line-height: 1.2;
         margin-bottom: 4px;
+        padding-left: 5px;
     }
     .anime-score {
         color: #ff4b4b;
         font-weight: bold;
         font-size: 13px;
+        padding-left: 5px;
     }
     .anime-genre {
         font-size: 12px;
         color: #888;
+        padding-left: 5px;
     }
 </style>
 """, unsafe_allow_html=True)
