@@ -6,11 +6,18 @@ st.set_page_config(page_title="Anirec", layout="wide")
 
 st.markdown("""
 <style>
-    .anime-container {
+    .anime-card {
         margin-bottom: 20px;
     }
+    .poster-img {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        border-radius: 8px;
+        margin-bottom: 8px;
+    }
     .anime-title {
-        height: 50px;
+        height: 45px;
         overflow: hidden;
         text-overflow: ellipsis;
         display: -webkit-box;
@@ -18,12 +25,17 @@ st.markdown("""
         -webkit-box-orient: vertical;
         font-weight: bold;
         font-size: 14px;
-        margin-top: 5px;
+        line-height: 1.2;
+        margin-bottom: 4px;
     }
     .anime-score {
         color: #ff4b4b;
         font-weight: bold;
-        font-size: 14px;
+        font-size: 13px;
+    }
+    .anime-genre {
+        font-size: 12px;
+        color: #888;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -93,10 +105,14 @@ if df_clean is not None:
                             idx = final_indices[i]
                             data = df_clean.iloc[idx]
                             with cols1[i]:
-                                st.image(data['image_url'], use_container_width=True)
-                                st.markdown(f"<div class='anime-title'>{data['title']}</div>", unsafe_allow_html=True)
-                                st.markdown(f"<div class='anime-score'>Score: {data['score']}</div>", unsafe_allow_html=True)
-                                st.caption(data['genres'].split(',')[0])
+                                st.markdown(f"""
+                                <div class="anime-card">
+                                    <img src="{data['image_url']}" class="poster-img">
+                                    <div class="anime-title">{data['title']}</div>
+                                    <div class="anime-score">Score: {data['score']}</div>
+                                    <div class="anime-genre">{data['genres'].split(',')[0]}</div>
+                                </div>
+                                """, unsafe_allow_html=True)
 
                     st.write("")
                     
@@ -106,10 +122,14 @@ if df_clean is not None:
                             idx = final_indices[i + 5]
                             data = df_clean.iloc[idx]
                             with cols2[i]:
-                                st.image(data['image_url'], use_container_width=True)
-                                st.markdown(f"<div class='anime-title'>{data['title']}</div>", unsafe_allow_html=True)
-                                st.markdown(f"<div class='anime-score'>Score: {data['score']}</div>", unsafe_allow_html=True)
-                                st.caption(data['genres'].split(',')[0])
+                                st.markdown(f"""
+                                <div class="anime-card">
+                                    <img src="{data['image_url']}" class="poster-img">
+                                    <div class="anime-title">{data['title']}</div>
+                                    <div class="anime-score">Score: {data['score']}</div>
+                                    <div class="anime-genre">{data['genres'].split(',')[0]}</div>
+                                </div>
+                                """, unsafe_allow_html=True)
 
                 else:
                     st.warning("Tidak ditemukan rekomendasi yang unik.")
