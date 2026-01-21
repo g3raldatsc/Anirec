@@ -23,15 +23,10 @@ st.markdown("""
         margin-top: -10px;
     }
     .anime-card {
-        margin-bottom: 20px;
         padding: 10px;
         background-color: #f9f9f9;
         border-radius: 15px;
-        transition: transform 0.2s;
-    }
-    .anime-card:hover {
-        transform: scale(1.02);
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        margin-bottom: 5px;
     }
     .poster-img {
         width: 100%;
@@ -72,7 +67,6 @@ st.markdown("""
     .stButton>button {
         width: 100%;
         border-radius: 10px;
-        height: 50px;
         font-weight: bold;
     }
 </style>
@@ -90,6 +84,22 @@ def load_data():
         return None, None, None
 
 df_clean, cosine_sim, indices = load_data()
+
+@st.dialog("Detail Anime")
+def show_detail(row):
+    col_img, col_info = st.columns([1, 2])
+    with col_img:
+        st.image(row['image_url'], use_container_width=True)
+    with col_info:
+        st.subheader(row['title'])
+        st.markdown(f"**Score:** ⭐ {row['score']}")
+        st.markdown(f"**Type:** {row['type']}")
+        st.markdown(f"**Episodes:** {row['episodes']}")
+        st.markdown(f"**Genre:** {row['genres']}")
+    
+    st.write("---")
+    st.write("### Sinopsis")
+    st.write(row['synopsis'])
 
 st.markdown("""
 <div class="main-header">
@@ -179,6 +189,8 @@ if df_clean is not None:
                                     <div class="anime-genre">{data['genres'].split(',')[0]}</div>
                                 </div>
                                 """, unsafe_allow_html=True)
+                                if st.button("Lihat Detail", key=f"btn_1_{i}"):
+                                    show_detail(data)
 
                     st.write("")
                     
@@ -196,6 +208,8 @@ if df_clean is not None:
                                     <div class="anime-genre">{data['genres'].split(',')[0]}</div>
                                 </div>
                                 """, unsafe_allow_html=True)
+                                if st.button("Lihat Detail", key=f"btn_2_{i}"):
+                                    show_detail(data)
 
                 else:
                     st.warning("Rekomendasi tidak ditemukan.")
