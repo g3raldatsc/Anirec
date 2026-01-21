@@ -6,17 +6,46 @@ st.set_page_config(page_title="Anirec", layout="wide")
 
 st.markdown("""
 <style>
+    .main-header {
+        text-align: center;
+        padding-top: 20px;
+        padding-bottom: 20px;
+    }
+    .main-title {
+        font-size: 3rem;
+        font-weight: 800;
+        color: #FF4B4B;
+        margin-bottom: 0;
+    }
+    .sub-title {
+        font-size: 1.2rem;
+        color: #555;
+        margin-top: -10px;
+    }
     .anime-card {
         margin-bottom: 20px;
         padding: 10px;
+        background-color: #f9f9f9;
+        border-radius: 15px;
+        transition: transform 0.2s;
+    }
+    .anime-card:hover {
+        transform: scale(1.02);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }
     .poster-img {
         width: 100%;
         height: 300px;
         object-fit: cover;
-        border-radius: 20px;
+        border-radius: 15px;
         box-shadow: 0 4px 8px rgba(0,0,0,0.1);
         margin-bottom: 10px;
+    }
+    .preview-img {
+        width: 100%;
+        max-width: 250px;
+        border-radius: 15px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     .anime-title {
         height: 45px;
@@ -29,18 +58,22 @@ st.markdown("""
         font-size: 14px;
         line-height: 1.2;
         margin-bottom: 4px;
-        padding-left: 5px;
+        color: #333;
     }
     .anime-score {
         color: #ff4b4b;
         font-weight: bold;
         font-size: 13px;
-        padding-left: 5px;
     }
     .anime-genre {
         font-size: 12px;
         color: #888;
-        padding-left: 5px;
+    }
+    .stButton>button {
+        width: 100%;
+        border-radius: 10px;
+        height: 50px;
+        font-weight: bold;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -58,20 +91,47 @@ def load_data():
 
 df_clean, cosine_sim, indices = load_data()
 
-st.title("Anirec")
-st.write("Temukan rekomendasi anime berdasarkan judul yang kamu cari.")
+st.markdown("""
+<div class="main-header">
+    <div class="main-title">ANIREC</div>
+    <div class="sub-title">Anime Romance Recommendation</div>
+</div>
+""", unsafe_allow_html=True)
+
 st.write("---")
 
 if df_clean is not None:
-    selected_anime = st.selectbox(
-        label="Ketik atau pilih judul anime:",
-        options=df_clean['title'].values,
-        index=None,
-        placeholder="Cari judul anime..."
-    )
+    col_search, col_space = st.columns([2, 1])
+    
+    with col_search:
+        selected_anime = st.selectbox(
+            label="Mulai pencarian Anda:",
+            options=df_clean['title'].values,
+            index=None,
+            placeholder="Ketik judul anime..."
+        )
 
     if selected_anime:
-        if st.button("Cari Rekomendasi"):
+        selected_row = df_clean[df_clean['title'] == selected_anime].iloc[0]
+        
+        st.write("")
+        with st.container():
+            c1, c2 = st.columns([1, 4])
+            with c1:
+                st.markdown(f'<img src="{selected_row["image_url"]}" class="preview-img">', unsafe_allow_html=True)
+            with c2:
+                st.subheader(selected_row['title'])
+                st.markdown(f"**Score:** {selected_row['score']}")
+                st.markdown(f"**Genre:** {selected_row['genres']}")
+                try:
+                    synopsis_preview = selected_row['synopsis'][:400] + "..." if len(selected_row['synopsis']) > 400 else selected_row['synopsis']
+                    st.caption(synopsis_preview)
+                except:
+                    pass
+
+        st.write("")
+        
+        if st.button("Cari Rekomendasi Serupa"):
             try:
                 idx = indices[selected_anime]
                 sim_scores = list(enumerate(cosine_sim[idx]))
@@ -101,7 +161,8 @@ if df_clean is not None:
                     final_indices.append(anime_idx)
                 
                 if final_indices:
-                    st.subheader(f"Hasil rekomendasi untuk {selected_anime}:")
+                    st.divider()
+                    st.subheader(f"Rekomendasi Terbaik:")
                     st.write("")
                     
                     cols1 = st.columns(5)
@@ -137,7 +198,7 @@ if df_clean is not None:
                                 """, unsafe_allow_html=True)
 
                 else:
-                    st.warning("Tidak ditemukan rekomendasi yang unik.")
+                    st.warning("Rekomendasi tidak ditemukan.")
                 
             except KeyError:
                 st.error("Data anime tidak ditemukan.")
