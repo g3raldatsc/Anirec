@@ -59,7 +59,7 @@ def load_data():
 df_clean, cosine_sim, indices = load_data()
 
 st.title("Anirec")
-st.write("Temukan anime rekomendasi berdasarkan kemiripan cerita.")
+st.write("Temukan rekomendasi anime berdasarkan judul yang kamu cari.")
 st.write("---")
 
 if df_clean is not None:
