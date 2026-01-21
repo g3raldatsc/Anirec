@@ -27,6 +27,10 @@ st.markdown("""
         background-color: #f9f9f9;
         border-radius: 15px;
         margin-bottom: 5px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
     }
     .poster-img {
         width: 100%;
@@ -43,17 +47,14 @@ st.markdown("""
         box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     .anime-title {
-        height: 45px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        display: -webkit-box;
-        -webkit-line-clamp: 2; 
-        -webkit-box-orient: vertical;
         font-weight: bold;
         font-size: 14px;
         line-height: 1.2;
         margin-bottom: 4px;
         color: #333;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .anime-score {
         color: #ff4b4b;
@@ -63,6 +64,10 @@ st.markdown("""
     .anime-genre {
         font-size: 12px;
         color: #888;
+        margin-bottom: 10px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
     .stButton>button {
         width: 100%;
@@ -85,21 +90,23 @@ def load_data():
 
 df_clean, cosine_sim, indices = load_data()
 
-@st.dialog("Detail Anime")
+if 'recommendations' not in st.session_state:
+    st.session_state.recommendations = []
+
+@st.dialog("Detail Anime", width="large")
 def show_detail(row):
-    col_img, col_info = st.columns([1, 2])
-    with col_img:
+    c1, c2 = st.columns([1, 2], gap="large")
+    with c1:
         st.image(row['image_url'], use_container_width=True)
-    with col_info:
+    with c2:
         st.subheader(row['title'])
-        st.markdown(f"**Score:** ⭐ {row['score']}")
+        st.markdown(f"**Score:** {row['score']}")
         st.markdown(f"**Type:** {row['type']}")
         st.markdown(f"**Episodes:** {row['episodes']}")
         st.markdown(f"**Genre:** {row['genres']}")
-    
-    st.write("---")
-    st.write("### Sinopsis")
-    st.write(row['synopsis'])
+        st.divider()
+        st.markdown("**Sinopsis:**")
+        st.write(row['synopsis'])
 
 st.markdown("""
 <div class="main-header">
@@ -141,7 +148,7 @@ if df_clean is not None:
 
         st.write("")
         
-        if st.button("Cari Rekomendasi Serupa"):
+        if st.button("Cari Rekomendasi"):
             try:
                 idx = indices[selected_anime]
                 sim_scores = list(enumerate(cosine_sim[idx]))
@@ -170,49 +177,54 @@ if df_clean is not None:
                         
                     final_indices.append(anime_idx)
                 
-                if final_indices:
-                    st.divider()
-                    st.subheader(f"Rekomendasi Terbaik:")
-                    st.write("")
-                    
-                    cols1 = st.columns(5)
-                    for i in range(5):
-                        if i < len(final_indices):
-                            idx = final_indices[i]
-                            data = df_clean.iloc[idx]
-                            with cols1[i]:
-                                st.markdown(f"""
-                                <div class="anime-card">
-                                    <img src="{data['image_url']}" class="poster-img">
-                                    <div class="anime-title">{data['title']}</div>
-                                    <div class="anime-score">Score: {data['score']}</div>
-                                    <div class="anime-genre">{data['genres'].split(',')[0]}</div>
-                                </div>
-                                """, unsafe_allow_html=True)
-                                if st.button("Lihat Detail", key=f"btn_1_{i}"):
-                                    show_detail(data)
-
-                    st.write("")
-                    
-                    cols2 = st.columns(5)
-                    for i in range(5):
-                        if i + 5 < len(final_indices):
-                            idx = final_indices[i + 5]
-                            data = df_clean.iloc[idx]
-                            with cols2[i]:
-                                st.markdown(f"""
-                                <div class="anime-card">
-                                    <img src="{data['image_url']}" class="poster-img">
-                                    <div class="anime-title">{data['title']}</div>
-                                    <div class="anime-score">Score: {data['score']}</div>
-                                    <div class="anime-genre">{data['genres'].split(',')[0]}</div>
-                                </div>
-                                """, unsafe_allow_html=True)
-                                if st.button("Lihat Detail", key=f"btn_2_{i}"):
-                                    show_detail(data)
-
-                else:
-                    st.warning("Rekomendasi tidak ditemukan.")
+                st.session_state.recommendations = final_indices
                 
             except KeyError:
                 st.error("Data anime tidak ditemukan.")
+                st.session_state.recommendations = []
+
+        if st.session_state.recommendations:
+            st.divider()
+            st.subheader(f"Rekomendasi Terbaik:")
+            st.write("")
+            
+            recs = st.session_state.recommendations
+            
+            cols1 = st.columns(5)
+            for i in range(5):
+                if i < len(recs):
+                    idx = recs[i]
+                    data = df_clean.iloc[idx]
+                    with cols1[i]:
+                        st.markdown(f"""
+                        <div class="anime-card">
+                            <img src="{data['image_url']}" class="poster-img">
+                            <div class="anime-title">{data['title']}</div>
+                            <div class="anime-score">Score: {data['score']}</div>
+                            <div class="anime-genre">{data['genres'].split(',')[0]}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        if st.button("Lihat Detail", key=f"btn_1_{i}"):
+                            show_detail(data)
+
+            st.write("")
+            
+            cols2 = st.columns(5)
+            for i in range(5):
+                if i + 5 < len(recs):
+                    idx = recs[i + 5]
+                    data = df_clean.iloc[idx]
+                    with cols2[i]:
+                        st.markdown(f"""
+                        <div class="anime-card">
+                            <img src="{data['image_url']}" class="poster-img">
+                            <div class="anime-title">{data['title']}</div>
+                            <div class="anime-score">Score: {data['score']}</div>
+                            <div class="anime-genre">{data['genres'].split(',')[0]}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                        if st.button("Lihat Detail", key=f"btn_2_{i}"):
+                            show_detail(data)
+        
+        elif st.session_state.recommendations == [] and st.button("Cari Rekomendasi Serupa", key="dummy_btn", disabled=True):
+             pass
