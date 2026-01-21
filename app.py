@@ -90,6 +90,7 @@ def load_data():
 
 df_clean, cosine_sim, indices = load_data()
 
+# Inisialisasi Session State
 if 'recommendations' not in st.session_state:
     st.session_state.recommendations = []
 
@@ -148,16 +149,21 @@ if df_clean is not None:
 
         st.write("")
         
-        if st.button("Cari Rekomendasi"):
+        if st.button("Cari Rekomendasi Serupa"):
             try:
                 idx = indices[selected_anime]
                 sim_scores = list(enumerate(cosine_sim[idx]))
                 sim_scores = sorted(sim_scores, key=lambda x: x[1], reverse=True)
                 
-                candidates = sim_scores[1:50]
-                final_indices = []
+                # Ambil 50 kandidat teratas dulu untuk difilter
+                candidates = sim_scores[1:51]
                 
+                final_indices = []
+                seen_titles = []  # List untuk menyimpan judul yang sudah diambil
+                
+                # Tambahkan judul pencarian utama ke filter agar tidak muncul di hasil
                 query_main = selected_anime.split(':')[0].lower().strip()
+                seen_titles.append(query_main)
                 
                 for i in candidates:
                     if len(final_indices) >= 10:
@@ -168,14 +174,32 @@ if df_clean is not None:
                     anime_title = row_data['title']
                     anime_score = row_data['score']
                     
+                    # 1. Filter Score Nol/NaN
                     if pd.isna(anime_score) or anime_score == 0:
                         continue
 
-                    title_lower = anime_title.lower()
-                    if query_main in title_lower:
+                    # 2. Filter Duplikat Franchise
+                    # Cek apakah judul kandidat mirip dengan yang sudah ada di hasil rekomendasi
+                    current_title_lower = anime_title.lower()
+                    is_duplicate = False
+                    
+                    for seen in seen_titles:
+                        # Logika: Jika "Clannad" sudah ada, maka "Clannad After Story" dianggap duplikat
+                        # Atau sebaliknya
+                        if seen in current_title_lower or current_title_lower in seen:
+                            is_duplicate = True
+                            break
+                    
+                    if is_duplicate:
                         continue
-                        
+
+                    # Jika lolos filter, masukkan ke hasil
                     final_indices.append(anime_idx)
+                    # Ambil kata kunci utama judul untuk disimpan di seen_titles (misal sebelum titik dua)
+                    base_name = current_title_lower.split(':')[0].strip()
+                    seen_titles.append(base_name)
+                    # Kita juga simpan full title untuk perbandingan yang lebih aman
+                    seen_titles.append(current_title_lower)
                 
                 st.session_state.recommendations = final_indices
                 
@@ -183,6 +207,7 @@ if df_clean is not None:
                 st.error("Data anime tidak ditemukan.")
                 st.session_state.recommendations = []
 
+        # TAMPILKAN HASIL DARI SESSION STATE
         if st.session_state.recommendations:
             st.divider()
             st.subheader(f"Rekomendasi Terbaik:")
@@ -190,6 +215,7 @@ if df_clean is not None:
             
             recs = st.session_state.recommendations
             
+            # Baris Pertama (0-4)
             cols1 = st.columns(5)
             for i in range(5):
                 if i < len(recs):
@@ -209,6 +235,7 @@ if df_clean is not None:
 
             st.write("")
             
+            # Baris Kedua (5-9)
             cols2 = st.columns(5)
             for i in range(5):
                 if i + 5 < len(recs):
@@ -226,5 +253,6 @@ if df_clean is not None:
                         if st.button("Lihat Detail", key=f"btn_2_{i}"):
                             show_detail(data)
         
+        # Tombol dummy agar layout tidak melompat
         elif st.session_state.recommendations == [] and st.button("Cari Rekomendasi Serupa", key="dummy_btn", disabled=True):
              pass
